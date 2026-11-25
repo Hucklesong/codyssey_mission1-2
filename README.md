@@ -95,6 +95,7 @@ python main.py
 ```bash
 python3 -m unittest discover -s tests -v   # 자동 테스트 29개
 python3 tools/benchmark.py                 # 퀴즈 1천/1만/10만 개 저장·불러오기·검색·추가 측정
+python3 tools/update_git_log.py            # 커밋 기록을 README와 docs/git_log.txt에 반영
 ```
 
 ---
@@ -213,7 +214,8 @@ codyssey_mission1-2/
 ├── tests/
 │   └── test_quiz_game.py   # 자동 테스트 29개 (unittest)
 ├── tools/
-│   └── benchmark.py        # 대량 퀴즈 저장/불러오기 성능 측정
+│   ├── benchmark.py        # 대량 퀴즈 저장·불러오기·검색·추가 성능 측정
+│   └── update_git_log.py   # 커밋 기록을 README·docs/git_log.txt에 반영
 ├── docs/
 │   ├── git_log.txt         # 전체 커밋 기록 텍스트 (git log --oneline --graph --all)
 │   └── screenshots/        # 실행 화면, 개발 환경, git log, clone/pull 캡처
@@ -587,7 +589,7 @@ python3 -m unittest discover -s tests -v
 
 <!-- GIT_LOG_START -->
 ```
-(update_git_log.sh 실행 시 실제 출력으로 채워짐)
+(python3 tools/update_git_log.py 실행 시 실제 출력으로 채워짐)
 ```
 <!-- GIT_LOG_END -->
 
