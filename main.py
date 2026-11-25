@@ -18,6 +18,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATE_FILE = os.path.join(BASE_DIR, "state.json")
 
 OPTION_COUNT = 4  # 선택지 개수
+PAGE_SIZE = 10    # 퀴즈 목록을 한 번에 보여줄 개수
 LINE = "=" * 40
 
 
@@ -279,7 +280,7 @@ class QuizGame:
             elif choice == 2:
                 self.add_quiz()
             elif choice == 3:
-                print("🚧 준비 중인 기능입니다.")
+                self.list_quizzes()
             elif choice == 4:
                 self.show_score()
             else:
@@ -355,6 +356,28 @@ class QuizGame:
             print(f"✅ 퀴즈가 추가되었습니다! (총 {len(self.quizzes)}개)")
         else:
             print("⚠️ 퀴즈는 이번 실행에만 추가되었고 파일에는 저장되지 않았습니다.")
+
+    # ---------- 3. 퀴즈 목록 ----------
+
+    def list_quizzes(self):
+        if not self.quizzes:
+            print("📭 등록된 퀴즈가 없습니다.")
+            return
+
+        total = len(self.quizzes)
+        print(f"\n📋 등록된 퀴즈 목록 (총 {total}개)")
+        print("-" * 40)
+        # 퀴즈가 많아도 화면이 넘치지 않도록 PAGE_SIZE개씩 끊어서 보여준다.
+        for start in range(0, total, PAGE_SIZE):
+            page = self.quizzes[start:start + PAGE_SIZE]
+            for number, quiz in enumerate(page, start=start + 1):
+                print(f"[{number}] {quiz.question}")
+            shown = start + len(page)
+            if shown < total:
+                more = input(f"-- {shown}/{total}개 표시. Enter: 다음, q: 그만 보기 -- ").strip().lower()
+                if more == "q":
+                    break
+        print("-" * 40)
 
     # ---------- 4. 점수 확인 ----------
 
