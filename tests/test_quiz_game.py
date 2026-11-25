@@ -143,6 +143,16 @@ class PersistenceTest(TempDirTestCase):
         self.assertEqual(game.total_played, 2)
         self.assertNotIn("새로운 최고 점수", output)
 
+    def test_legacy_high_score_total_is_filled_on_equal_score(self):
+        self.write_raw('{"high_score": 7, "total_played": 2}')
+        game = self.new_game()
+        self.assertEqual(game.high_score_total, 0)
+        _, output = run_quietly(game.play, inputs=[str(item["answer"]) for item in questions])
+        self.assertEqual((game.high_score, game.high_score_total), (7, 7))
+        self.assertNotIn("새로운 최고 점수", output)
+        _, output = run_quietly(game.show_score)
+        self.assertIn("100점 (7문제 중 7문제 정답)", output)
+
     def test_hint_then_answer(self):
         game = self.new_game()
         correct, output = run_quietly(game.ask, game.quizzes[0], 1, inputs=["0", str(game.quizzes[0].answer)])

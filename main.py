@@ -360,6 +360,9 @@ class QuizGame:
             self.high_score = correct
             self.high_score_total = total
             print("🎉 새로운 최고 점수입니다!")
+        elif correct == self.high_score and self.high_score_total == 0:
+            # 예전 형식에서 옮겨 온 기록은 문제 수를 모른다(0). 같은 점수를 다시 내면 그 판의 문제 수로 채운다.
+            self.high_score_total = total
         print(LINE)
         self.save()
 
