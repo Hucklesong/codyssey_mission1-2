@@ -95,15 +95,37 @@ class QuizGame:
         self.save_state()
         self.print_stats()
 
-    def run(self):
+    def play(self):
         self.score = 0
-        print("\n🎬 영화 퀴즈 게임에 오신 것을 환영합니다!")
-        self.print_stats()
-
+        print(f"\n📝 퀴즈를 시작합니다! (총 {len(self.quizzes)}문제)")
         for i, quiz in enumerate(self.quizzes, start=1):
             self.play_quiz(quiz, i)
-
         self.show_result()
+
+    @staticmethod
+    def show_menu():
+        print(f"\n{'='*40}")
+        print("1. 퀴즈 풀기")
+        print("2. 퀴즈 추가")
+        print("3. 퀴즈 목록")
+        print("4. 점수 확인")
+        print("5. 종료")
+        print(f"{'='*40}")
+
+    def run(self):
+        print("\n🎬 영화 퀴즈 게임에 오신 것을 환영합니다!")
+        while True:
+            self.show_menu()
+            choice = self.get_number("선택: ", 1, 5)
+            if choice == 1:
+                self.play()
+            elif choice in (2, 3):
+                print("🚧 준비 중인 기능입니다.")
+            elif choice == 4:
+                self.print_stats()
+            else:
+                print("👋 게임을 종료합니다.")
+                break
 
 
 if __name__ == "__main__":
