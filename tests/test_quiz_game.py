@@ -7,6 +7,7 @@
 import io
 import json
 import os
+import signal
 import sys
 import tempfile
 import unittest
@@ -231,6 +232,21 @@ class MenuTest(TempDirTestCase):
         _, output = run_quietly(game.run, inputs=inputs)
         self.assertIn("입력이 중단되어", output)
         self.assertEqual(self.read_json()["quizzes"][-1]["question"], "중단 전 문제")
+
+    def test_sigterm_saves_and_exits(self):
+        game = QuizGame(StateStore(self.path))
+
+        def send_sigterm(prompt=""):
+            os.kill(os.getpid(), signal.SIGTERM)  # 입력을 기다리는 중에 종료 신호가 온 상황
+            return "1"
+
+        buffer = io.StringIO()
+        with patch("builtins.input", side_effect=send_sigterm), redirect_stdout(buffer):
+            game.run()
+        self.assertIn("종료 신호(SIGTERM)", buffer.getvalue())
+        self.assertIn("데이터를 저장했습니다", buffer.getvalue())
+        self.assertTrue(os.path.exists(self.path))
+        self.assertIs(signal.getsignal(signal.SIGTERM), signal.SIG_DFL)  # 원래 처리 방식으로 복구
 
     def test_eof_saves_and_exits(self):
         game = QuizGame(StateStore(self.path))
