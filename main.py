@@ -10,6 +10,7 @@
 import json
 import os
 import shutil
+import signal
 
 from questions import questions as DEFAULT_QUESTIONS
 
@@ -276,6 +277,8 @@ class QuizGame:
     def run(self):
         print(f"\n{LINE}\n       🎬 영화 퀴즈 게임 🎬\n{LINE}")
         self.load()
+        # kill 명령 등 외부 종료 신호(SIGTERM)도 Ctrl+C와 같은 방식으로 저장 후 종료한다.
+        previous_handler = signal.signal(signal.SIGTERM, self.on_terminate)
         try:
             while True:
                 self.show_menu()
@@ -297,6 +300,14 @@ class QuizGame:
             print("\n\n⚠️ 입력이 중단되어 프로그램을 종료합니다.")
             if self.save():
                 print("💾 데이터를 저장했습니다.")
+        finally:
+            signal.signal(signal.SIGTERM, previous_handler)
+
+    @staticmethod
+    def on_terminate(signum, frame):
+        """SIGTERM을 받으면 KeyboardInterrupt로 바꿔 run()의 저장 후 종료 흐름을 탄다."""
+        print("\n⚠️ 종료 신호(SIGTERM)를 받았습니다.")
+        raise KeyboardInterrupt
 
     @staticmethod
     def show_menu():
