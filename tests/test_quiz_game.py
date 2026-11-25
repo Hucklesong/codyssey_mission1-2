@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from main import Quiz, QuizGame, StateStore  # noqa: E402
+from main import MAX_TEXT_LENGTH, Quiz, QuizGame, StateStore  # noqa: E402
 from questions import questions  # noqa: E402
 
 SAMPLE = {"question": "Q?", "options": ["a", "b", "c", "d"], "answer": 2, "hint": "h"}
@@ -94,6 +94,16 @@ class InputTest(unittest.TestCase):
         text, output = run_quietly(QuizGame.get_text, "> ", inputs=["", "   ", " 봉준호 "])
         self.assertEqual(text, "봉준호")
         self.assertEqual(output.count("내용을 입력하세요"), 2)
+
+    def test_get_text_rejects_too_long(self):
+        text, output = run_quietly(QuizGame.get_text, "> ", inputs=["가" * (MAX_TEXT_LENGTH + 1), "가" * MAX_TEXT_LENGTH])
+        self.assertEqual(len(text), MAX_TEXT_LENGTH)
+        self.assertIn("너무 깁니다", output)
+
+    def test_get_number_huge_number_is_out_of_range(self):
+        number, output = run_quietly(QuizGame.get_number, "> ", 1, 5, inputs=["9" * 5000, "2"])
+        self.assertEqual(number, 2)
+        self.assertTrue("범위를 벗어났습니다" in output or "숫자가 아닙니다" in output)
 
     def test_get_text_allow_empty(self):
         text, _ = run_quietly(QuizGame.get_text, "> ", True, inputs=[""])

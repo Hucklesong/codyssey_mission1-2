@@ -19,6 +19,7 @@ STATE_FILE = os.path.join(BASE_DIR, "state.json")
 
 OPTION_COUNT = 4  # 선택지 개수
 PAGE_SIZE = 10    # 퀴즈 목록을 한 번에 보여줄 개수
+MAX_TEXT_LENGTH = 200  # 문제·선택지·힌트 한 칸의 최대 글자 수
 LINE = "=" * 40
 
 
@@ -260,9 +261,12 @@ class QuizGame:
 
     @staticmethod
     def get_text(prompt, allow_empty=False):
-        """문자열을 입력받는다. allow_empty가 False면 빈 입력을 다시 받는다."""
+        """문자열을 입력받는다. 빈 입력(allow_empty가 False일 때)과 너무 긴 입력은 다시 받는다."""
         while True:
             text = input(prompt).strip()
+            if len(text) > MAX_TEXT_LENGTH:
+                print(f"⚠️ 너무 깁니다. {MAX_TEXT_LENGTH}자 이내로 입력하세요. (지금 {len(text)}자)")
+                continue
             if text or allow_empty:
                 return text
             print("⚠️ 내용을 입력하세요.")
