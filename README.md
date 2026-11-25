@@ -444,3 +444,5 @@ git pull
 | 퀴즈 추가 | 퀴즈 목록 · 점수 확인 |
 | --- | --- |
 | ![퀴즈 추가](docs/screenshots/add_quiz.png) | ![점수 확인](docs/screenshots/score.png) |
+
+> clone 실습: 2026-11-25 복제한 폴더에서 이 줄을 추가해 push하고, 원래 폴더에서 pull로 받았습니다.
