@@ -257,6 +257,15 @@ class QuizGame:
                 continue
             return number
 
+    @staticmethod
+    def get_text(prompt, allow_empty=False):
+        """문자열을 입력받는다. allow_empty가 False면 빈 입력을 다시 받는다."""
+        while True:
+            text = input(prompt).strip()
+            if text or allow_empty:
+                return text
+            print("⚠️ 내용을 입력하세요.")
+
     # ---------- 메뉴 ----------
 
     def run(self):
@@ -268,7 +277,7 @@ class QuizGame:
             if choice == 1:
                 self.play()
             elif choice == 2:
-                print("🚧 준비 중인 기능입니다.")
+                self.add_quiz()
             elif choice == 3:
                 print("🚧 준비 중인 기능입니다.")
             elif choice == 4:
@@ -331,6 +340,21 @@ class QuizGame:
             print("🎉 새로운 최고 점수입니다!")
         print(LINE)
         self.save()
+
+    # ---------- 2. 퀴즈 추가 ----------
+
+    def add_quiz(self):
+        print("\n📌 새로운 퀴즈를 추가합니다.")
+        question = self.get_text("문제를 입력하세요: ")
+        options = [self.get_text(f"선택지 {i}: ") for i in range(1, OPTION_COUNT + 1)]
+        answer = self.get_number(f"정답 번호 (1-{OPTION_COUNT}): ", 1, OPTION_COUNT)
+        hint = self.get_text("힌트 (없으면 Enter): ", allow_empty=True)
+
+        self.quizzes.append(Quiz(question, options, answer, hint))
+        if self.save():
+            print(f"✅ 퀴즈가 추가되었습니다! (총 {len(self.quizzes)}개)")
+        else:
+            print("⚠️ 퀴즈는 이번 실행에만 추가되었고 파일에는 저장되지 않았습니다.")
 
     # ---------- 4. 점수 확인 ----------
 
