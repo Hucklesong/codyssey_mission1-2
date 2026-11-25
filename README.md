@@ -93,8 +93,8 @@ python main.py
 ### 테스트와 성능 측정
 
 ```bash
-python3 -m unittest discover -s tests -v   # 자동 테스트 25개
-python3 tools/benchmark.py                 # 퀴즈 1천/1만/10만 개 저장·불러오기 측정
+python3 -m unittest discover -s tests -v   # 자동 테스트 29개
+python3 tools/benchmark.py                 # 퀴즈 1천/1만/10만 개 저장·불러오기·검색·추가 측정
 ```
 
 ---
@@ -136,8 +136,70 @@ python3 tools/benchmark.py                 # 퀴즈 1천/1만/10만 개 저장·
 | 숫자가 아님 (`abc`) | 다시 입력 | `⚠️ 숫자가 아닙니다. 1-5 사이의 숫자를 입력하세요.` |
 | 범위 밖 (메뉴 `9`, 정답 `7`) | 다시 입력 | `⚠️ 범위를 벗어났습니다. 1-5 사이의 숫자를 입력하세요.` |
 | 빈 문제/선택지 | 다시 입력 | `⚠️ 내용을 입력하세요.` |
+| 매우 긴 글 (200자 초과) | 다시 입력 (`MAX_TEXT_LENGTH`) | `⚠️ 너무 깁니다. 200자 이내로 입력하세요. (지금 350자)` |
+| 매우 큰 숫자 (`99999…`) | 범위 밖 또는 숫자 아님으로 처리 (4,300자리 이상은 파이썬이 변환을 거부) | `⚠️ 범위를 벗어났습니다. …` |
+| 음수 (`-1`) | 범위 밖으로 처리 | `⚠️ 범위를 벗어났습니다. …` |
 | `Ctrl+C`, EOF | 저장 후 종료 | `⚠️ 입력이 중단되어 프로그램을 종료합니다.` |
+| 종료 신호 (`kill`, SIGTERM) | 저장 후 종료 | `⚠️ 종료 신호(SIGTERM)를 받았습니다.` |
 | 퀴즈가 0개 | 풀기/목록에서 안내 | `📭 등록된 퀴즈가 없습니다.` |
+
+### 실행 예시 (실제 세션 로그)
+
+처음 실행해 잘못된 입력 → 퀴즈 풀기(힌트 사용) → 점수 확인 → 종료까지의 실제 출력입니다. (`…`은 중간 문제 생략)
+
+```
+========================================
+       🎬 영화 퀴즈 게임 🎬
+========================================
+📂 기본 퀴즈 7개로 시작합니다.
+
+========================================
+1. 퀴즈 풀기
+2. 퀴즈 추가
+3. 퀴즈 목록
+4. 점수 확인
+5. 종료
+========================================
+선택: abc
+⚠️ 숫자가 아닙니다. 1-5 사이의 숫자를 입력하세요.
+선택: 1
+
+📝 퀴즈를 시작합니다! (총 7문제)
+
+----------------------------------------
+[문제 1] 영화 '기생충'의 감독은 누구인가요?
+  1. 박찬욱
+  2. 봉준호
+  3. 최동훈
+  4. 류승완
+  (0: 힌트 보기)
+정답 입력 (0-4): 0
+💡 힌트: 설국열차, 괴물을 만든 감독이에요.
+정답 입력 (0-4): 2
+✅ 정답입니다!
+…
+----------------------------------------
+[문제 4] 영화 '인터스텔라'의 감독은?
+  1. 스티븐 스필버그
+  2. 제임스 카메론
+  3. 크리스토퍼 놀란
+  4. 리들리 스콧
+  (0: 힌트 보기)
+정답 입력 (0-4): 1
+❌ 오답입니다. 정답은 3번 (크리스토퍼 놀란)입니다.
+…
+========================================
+🏆 결과: 7문제 중 6문제 정답! (86점)
+🎉 새로운 최고 점수입니다!
+========================================
+…
+선택: 4
+🏆 최고 점수: 86점 (7문제 중 6문제 정답)
+🎮 총 플레이 횟수: 1회
+…
+선택: 5
+👋 게임을 종료합니다. 다음에 또 만나요!
+```
 
 ---
 
@@ -149,11 +211,12 @@ codyssey_mission1-2/
 ├── questions.py            # 기본 퀴즈 데이터 (영화 퀴즈 7문제)
 ├── state.json              # 퀴즈·점수 저장 파일 (실행하며 갱신)
 ├── tests/
-│   └── test_quiz_game.py   # 자동 테스트 25개 (unittest)
+│   └── test_quiz_game.py   # 자동 테스트 29개 (unittest)
 ├── tools/
 │   └── benchmark.py        # 대량 퀴즈 저장/불러오기 성능 측정
 ├── docs/
-│   └── screenshots/        # 실행 화면, git log, clone/pull 캡처
+│   ├── git_log.txt         # 전체 커밋 기록 텍스트 (git log --oneline --graph --all)
+│   └── screenshots/        # 실행 화면, 개발 환경, git log, clone/pull 캡처
 ├── README.md
 └── .gitignore              # 캐시, 백업(.bak), 임시(.tmp), 손상 보관(.corrupted) 파일 제외
 ```
@@ -179,9 +242,34 @@ codyssey_mission1-2/
 | --- | --- | --- | --- |
 | `Quiz` | 문제 하나를 표현하고 출력·채점한다 | `question`, `options`, `answer`, `hint` | `show()`, `show_hint()`, `is_correct()`, `to_dict()`, `from_dict()` |
 | `StateStore` | `state.json`을 안전하게 읽고 쓰며 백업·복구한다 | `path`, `backup_path`, `corrupted_path`, `can_save` | `load()`, `save()` |
-| `QuizGame` | 메뉴와 입력을 처리하고 게임을 진행한다 | `quizzes`, `high_score`, `high_score_total`, `total_played`, `store` | `run()`, `show_menu()`, `get_number()`, `get_text()`, `play()`, `ask()`, `finish_game()`, `add_quiz()`, `list_quizzes()`, `show_score()`, `load()`, `save()`, `default_quizzes()` |
+| `QuizGame` | 메뉴와 입력을 처리하고 게임을 진행한다 | `quizzes`, `high_score`, `high_score_total`, `total_played`, `store` | `run()`, `show_menu()`, `get_number()`, `get_text()`, `play()`, `ask()`, `finish_game()`, `add_quiz()`, `list_quizzes()`, `show_score()`, `load()`, `save()`, `default_quizzes()`, `on_terminate()` |
 
 `QuizGame`은 파일 형식을 모르고 `StateStore`에 "불러와 줘 / 저장해 줘"만 요청합니다. `StateStore`는 화면 메뉴를 모릅니다. 그래서 저장 방식을 바꿔도 게임 코드는 그대로입니다.
+
+### 함수별 책임과 예외를 잡는 위치
+
+```
+main.py
+├─ Quiz ─────────────── 문제 하나 (화면 입력 없음)
+│   ├─ show() / show_hint()      출력
+│   ├─ is_correct()              채점
+│   └─ to_dict() / from_dict()   저장용 변환·형식 검사 ──▶ 형식 오류면 ValueError를 일으킴
+│
+├─ StateStore ───────── 파일 담당 (화면 메뉴 모름)
+│   ├─ load()   ◀── 여기서 잡음: ValueError(문법·인코딩·스키마) → 손상 복구 / OSError(권한) → 저장 잠금
+│   └─ save()   ◀── 여기서 잡음: OSError(쓰기 실패) → False 반환, 원본 유지
+│
+└─ QuizGame ─────────── 입력·진행 담당
+    ├─ get_number() ◀── 여기서 잡음: ValueError(숫자 아님) → 다시 입력
+    ├─ get_text()       빈 입력·200자 초과 → 다시 입력
+    ├─ run()        ◀── 여기서 잡음: KeyboardInterrupt·EOFError·SIGTERM → 저장 후 종료
+    ├─ on_terminate()   SIGTERM을 받으면 KeyboardInterrupt로 바꿔 run()에 넘김
+    ├─ play() → ask() → finish_game()   게임 진행 (점수 비교 후 save)
+    ├─ add_quiz() / list_quizzes() / show_score()
+    └─ load() / save() / default_quizzes()   StateStore에 위임
+```
+
+예외는 **그 오류를 해결할 수 있는 곳에서** 잡습니다. 파일 오류는 파일을 아는 `StateStore`가, 입력 오류는 입력을 받는 `get_number()`가, 프로그램 종료는 메뉴 루프인 `run()`이 처리합니다.
 
 ### 예시 흐름 1: 퀴즈 한 문제 풀기
 
@@ -263,7 +351,24 @@ QuizGame.run()
 | `high_score_total` | int | 0 이상 | 최고 점수를 냈을 때의 문제 수 (100점 환산에 사용) |
 | `total_played` | int | 0 이상 | 끝까지 푼 횟수 |
 
-최고 점수는 **정답 수** 기준으로 비교합니다. 이전 형식(`quizzes` 없이 점수만 있는 파일)은 손상으로 보지 않고, 점수는 유지한 채 기본 퀴즈를 사용합니다.
+### 최고 점수 기록 정책 (`high_score`와 `high_score_total`의 일관성)
+
+| 상황 | `high_score` | `high_score_total` |
+| --- | --- | --- |
+| 이번 판 정답 수 > 최고 기록 | 이번 정답 수로 갱신 | 이번 판 문제 수로 **함께** 갱신 |
+| 같은 점수이고 `high_score_total`이 0 (문제 수를 모르는 예전 기록) | 그대로 | 이번 판 문제 수로 채움 |
+| 그 외 (낮거나 같은 점수) | 그대로 | 그대로 |
+
+- 두 값은 항상 `finish_game()` 한 곳에서 함께 바뀌므로 서로 어긋나지 않습니다.
+- 최고 점수는 **정답 수** 기준으로 비교하고, 점수 확인에서는 `high_score / high_score_total × 100`으로 100점 환산을 보여줍니다. `high_score_total`이 0이면 환산하지 않고 정답 수만 보여줍니다.
+- 이전 형식(`quizzes` 없이 점수만 있는 파일)은 손상으로 보지 않고, 점수는 유지한 채 기본 퀴즈를 사용합니다. 이때 `high_score_total`은 0으로 시작해 위 규칙대로 채워집니다.
+
+### 동시 실행 시 주의
+
+이 게임은 한 번에 하나만 실행하는 것을 전제로 합니다. 터미널 두 개에서 동시에 실행하면 각자 시작할 때 읽은 데이터를 메모리에 들고 있다가 저장하므로, **나중에 저장한 쪽이 앞의 변경을 덮어씁니다.** (예: A 창에서 추가한 퀴즈가 B 창이 종료하며 저장할 때 사라짐)
+
+- 파일 자체는 깨지지 않습니다. 저장이 임시 파일 → `os.replace()` 교체로 한 번에 일어나기 때문입니다.
+- 방지책 (현재는 문서로 안내, 필요해지면 구현): 시작할 때 `state.json.lock` 파일을 `open(..., "x")`로 만들어 이미 있으면 "다른 창에서 실행 중"이라고 알리고, 종료할 때 지웁니다. 또는 저장 직전에 파일 수정 시각을 다시 확인해 바뀌었으면 다시 읽고 합칩니다. SQLite로 바꾸면 데이터베이스가 잠금을 대신 처리합니다.
 
 ### 왜 JSON인가
 
@@ -291,8 +396,49 @@ QuizGame.run()
 | 읽기 권한 없음 등 | `OSError` (`PermissionError` 포함) | 기본 퀴즈로 실행, 안내 | **이번 실행은 저장 안 함** (멀쩡한 원본을 덮어쓰지 않기 위해) |
 | 쓰기 실패 (권한, 디스크 가득 참) | `OSError` | 안내 메시지, 임시 파일 삭제, 원본 유지 | 실패를 알리고 게임은 계속 |
 | `Ctrl+C`, EOF | `KeyboardInterrupt`, `EOFError` | 저장 후 종료 | 정상 |
+| 종료 신호 (`kill <PID>`, SIGTERM) | `signal.signal(SIGTERM, on_terminate)` → `KeyboardInterrupt`로 변환 | 저장 후 종료 | 정상 |
+| 강제 종료 (`kill -9`, SIGKILL), 정전 | 프로그램이 받을 수 없는 신호 | 마지막 저장 시점의 데이터가 남음 | 저장 시점(추가 직후, 풀이 직후)마다 이미 저장했으므로 잃는 것은 진행 중이던 한 판 |
 
 `JSONDecodeError`와 `UnicodeDecodeError`는 모두 `ValueError`의 하위 예외라서 `except ValueError` 한 곳에서 함께 처리합니다.
+
+### 복구 우선순위
+
+시작할 때 `StateStore.load()`는 아래 순서로 **가장 최근의 정상 데이터**를 찾습니다. 위에서 성공하면 아래 단계는 하지 않습니다.
+
+| 순서 | 시도 | 성공하면 | 실패하면 |
+| --- | --- | --- | --- |
+| 1 | `state.json` 읽기 + 형식 검사 | 그 데이터로 시작 | 원인에 따라 2 또는 4로 |
+| 2 | (손상일 때) 손상 파일을 `state.json.corrupted`로 보관 후 `state.json.bak` 읽기 + 형식 검사 | 백업으로 시작, `state.json`으로 복원 | 3으로 |
+| 3 | 기본 퀴즈(`questions.py`)로 초기화 | 점수 0부터 시작 | — (항상 성공) |
+| 4 | (읽기 권한 오류일 때) 원본은 멀쩡할 수 있으므로 손대지 않음 | 기본 퀴즈로 실행, 이번 실행은 저장 안 함 | — |
+
+손상(내용이 잘못됨)과 읽기 실패(파일에 접근 못 함)를 구분하는 이유: 손상된 파일은 옮겨도 잃을 것이 없지만, 권한 문제로 못 읽은 파일은 정상일 수 있어 덮어쓰면 데이터를 잃습니다.
+
+### 복구할 때 보이는 안내 메시지
+
+```
+# 손상 → 백업에서 복구 성공
+⚠️ 데이터 파일이 손상되었습니다. (Expecting property name enclosed in double quotes: line 1 column 3 (char 2))
+   손상된 파일은 state.json.corrupted(으)로 옮겨 보관했습니다.
+   백업 파일(state.json.bak)에서 데이터를 복구했습니다.
+📂 저장된 데이터를 불러왔습니다. (퀴즈 8개, 최고 점수 7문제 정답)
+
+# 손상 → 백업도 없음 (복구 실패 → 초기화)
+⚠️ 데이터 파일이 손상되었습니다. (선택지는 비어 있지 않은 문자열 4개여야 합니다.)
+   손상된 파일은 state.json.corrupted(으)로 옮겨 보관했습니다.
+   기본 퀴즈 데이터로 초기화합니다.
+📂 기본 퀴즈 7개로 시작합니다.
+
+# 읽기 권한 없음
+⚠️ 데이터 파일을 읽을 수 없습니다. (Permission denied)
+   기본 퀴즈로 실행하며, 원본 보호를 위해 이번 실행에서는 저장하지 않습니다.
+📂 기본 퀴즈 7개로 시작합니다.
+
+# 저장 실패 (디스크 가득 참 등)
+⚠️ 데이터를 저장하지 못했습니다. (No space left on device)
+```
+
+복구에 실패해도 `state.json.corrupted`가 남아 있으므로, 아래 수동 복구 방법으로 내용을 확인하고 되살릴 수 있습니다.
 
 ### 백업 전략 (자동)
 
@@ -325,11 +471,23 @@ rm state.json state.json.bak
 
 `python3 tools/benchmark.py`로 측정한 결과입니다. (Linux, Python 3.13, 각 5회 중 최솟값. 컴퓨터마다 수치는 다르지만 증가 비율은 비슷합니다.)
 
+#### 표 1. 현재 구조(JSON 파일 전체 저장)
+
 | 퀴즈 수 | 저장 | 불러오기 | 파일 크기 | 불러올 때 최대 메모리 |
 | --- | --- | --- | --- | --- |
-| 1,000 | 5.5 ms | 2.2 ms | 286 KB | 1.1 MB |
-| 10,000 | 56 ms | 26 ms | 2.9 MB | 11 MB |
-| 100,000 | 647 ms | 394 ms | 28.8 MB | 113 MB |
+| 1,000 | 6.3 ms | 2.8 ms | 286 KB | 1.1 MB |
+| 10,000 | 49 ms | 22 ms | 2.9 MB | 11 MB |
+| 100,000 | 528 ms | 329 ms | 28.8 MB | 113 MB |
+
+#### 표 2. 대표 작업별 시간: 현재 구조 vs SQLite (단위 ms)
+
+| 퀴즈 수 | 키워드 검색 (list) | 키워드 검색 (SQLite `LIKE`) | 번호로 찾기 (list) | 번호로 찾기 (SQLite 기본키) | 1개 추가 + 저장 (JSON) | 1개 추가 + 저장 (SQLite) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1,000 | 0.04 | 0.05 | 0.0001 | 0.005 | 7.4 | 0.74 |
+| 10,000 | 0.22 | 0.44 | 0.0001 | 0.004 | 51 | 0.77 |
+| 100,000 | 2.3 | 8.2 | 0.0001 | 0.004 | 534 | 0.70 |
+
+검색은 둘 다 전체를 훑는 O(n)이라 메모리 안의 list가 오히려 빠릅니다. 차이는 **추가(저장)**에서 납니다. JSON은 한 문제를 추가해도 파일 전체를 다시 쓰므로 O(n)이고, SQLite는 한 줄만 쓰므로 개수와 상관없이 약 0.7 ms입니다.
 
 ### 분석
 
@@ -340,9 +498,19 @@ rm state.json state.json.bak
 
 ### 결론과 확장 방안
 
-- **1만 개까지:** 현재 구조(JSON 전체 저장)로 충분합니다. 저장 0.06초, 시작 0.03초 수준입니다.
-- **10만 개 이상:** 퀴즈 하나만 추가해도 0.6초 동안 28 MB를 다시 써야 하므로 비효율적입니다. 이때는 `StateStore`만 SQLite(`sqlite3` 표준 모듈) 구현으로 바꾸면 한 문제만 추가·검색할 수 있습니다. `QuizGame`은 그대로 둡니다.
-- **문제 검색이 필요해지면:** 지금은 목록을 처음부터 훑는 O(n) 방식입니다. 번호로 찾기는 리스트 인덱스로 O(1)이고, 키워드 검색이 잦아지면 SQLite 인덱스나 dict 색인을 추가합니다.
+- **1만 개까지:** 현재 구조(JSON 전체 저장)로 충분합니다. 추가·저장 약 0.05초, 시작 약 0.02초입니다.
+- **문제 검색이 필요해지면:** 10만 개에서도 list 검색이 2 ms라 별도 구조가 필요 없습니다. 같은 문제를 반복해서 찾는다면 `{문제: Quiz}` dict 색인으로 O(1) 조회를 만들 수 있습니다.
+
+#### SQLite로 바꾸는 기준 (수치)
+
+아래 중 하나라도 해당하면 `StateStore`를 SQLite(`sqlite3` 표준 모듈) 구현으로 교체합니다. `Quiz`와 `QuizGame`은 그대로 둡니다 (10장).
+
+| 기준 | 수치 | 근거 |
+| --- | --- | --- |
+| 퀴즈 1개 추가 후 저장 시간 | **100 ms 초과** (측정상 약 2만 개) | 사람이 지연을 느끼기 시작하는 시간. SQLite는 개수와 무관하게 약 1 ms |
+| `state.json` 크기 | **10 MB 초과** (약 3.5만 개) | 매 저장마다 10 MB를 다시 쓰는 것은 낭비, 사람이 열어 보기도 어려움 |
+| 불러올 때 메모리 | **50 MB 초과** (약 4.5만 개) | 전체를 메모리에 올리는 구조의 한계 |
+| 동시 실행 필요 | 여러 창·여러 사용자 | JSON은 나중 저장이 덮어씀 (7장), SQLite는 잠금 제공 |
 
 ---
 
@@ -361,25 +529,34 @@ rm state.json state.json.bak
 | 입력 안내 문구 변경 | `get_number()`, `get_text()` | 기능 메서드들 |
 | 기본 퀴즈 교체 | `questions.py` | 코드 전부 |
 
-변경 후에는 `python3 -m unittest discover -s tests`로 기존 동작이 깨지지 않았는지 확인합니다.
+### 변경 후 최소 테스트 체크리스트
+
+| 변경 종류 | 자동 테스트 | 직접 확인 |
+| --- | --- | --- |
+| 모든 변경 | `python3 -m unittest discover -s tests` 전체 통과 | 메뉴 1~5를 한 번씩 실행 |
+| 퀴즈 데이터 스키마 확장 (필드 추가) | `from_dict` 거부 사례에 새 필드 규칙 추가, `to_dict` ↔ `from_dict` 왕복 테스트 | **예전 형식 `state.json`(새 필드 없음)으로 시작해 손상으로 처리되지 않는지**, 추가 후 재실행해 새 필드가 남는지 |
+| 점수 규칙 변경 | 최고 점수 갱신/유지/예전 기록 테스트 수정 | 풀이 후 4번 점수 확인 화면 |
+| 저장 방식·경로 변경 | 영속성·복구 테스트 전체 (손상, 백업, 권한, 쓰기 실패) | 기존 `state.json`을 가진 상태에서 실행해 데이터가 이어지는지 |
+| 입력 규칙 변경 | 입력 테스트에 새 경계값 추가 (빈 값, 최대 길이, 범위 끝값) | 경계값을 직접 입력 |
+| 대량 데이터 관련 변경 | `python3 tools/benchmark.py`로 이전 수치와 비교 | — |
 
 ---
 
 ## 11. 테스트
 
-`tests/test_quiz_game.py`에 표준 라이브러리 `unittest`로 25개의 테스트가 있으며, 모두 임시 폴더에서 실행되어 실제 `state.json`을 건드리지 않습니다.
+`tests/test_quiz_game.py`에 표준 라이브러리 `unittest`로 29개의 테스트가 있으며, 모두 임시 폴더에서 실행되어 실제 `state.json`을 건드리지 않습니다.
 
 | 분류 | 확인하는 내용 |
 | --- | --- |
 | Quiz | 채점, dict 변환, 잘못된 데이터 거부, 기본 퀴즈 형식 |
-| 입력 | 빈 입력·문자·범위 밖·공백 처리, 빈 문자열 거부 |
-| 영속성 | 첫 실행, 추가한 퀴즈와 최고 점수가 재실행 후 유지, 낮은 점수는 최고 점수를 바꾸지 않음, 한글 UTF-8 저장, 이전 형식 호환 |
+| 입력 | 빈 입력·문자·범위 밖·공백 처리, 빈 문자열 거부, 200자 초과 거부, 매우 큰 숫자 |
+| 영속성 | 첫 실행, 추가한 퀴즈와 최고 점수가 재실행 후 유지, 낮은 점수는 최고 점수를 바꾸지 않음, 예전 기록의 `high_score_total` 채우기, 한글 UTF-8 저장, 이전 형식 호환 |
 | 복구 | 손상 → 백업 복구, 백업 없음 → 기본 퀴즈, 스키마 오류, 인코딩 오류, 읽기 권한 오류 시 원본 보호, 쓰기 실패 시 원본 유지 |
-| 메뉴 | 메뉴 1~5 전체 흐름, `Ctrl+C`·EOF 저장 후 종료, 퀴즈 0개, 목록 페이지 나누기 |
+| 메뉴 | 메뉴 1~5 전체 흐름, `Ctrl+C`·EOF·SIGTERM 저장 후 종료, 퀴즈 0개, 목록 페이지 나누기 |
 
 ```bash
 python3 -m unittest discover -s tests -v
-# Ran 25 tests ... OK
+# Ran 29 tests ... OK
 ```
 
 ---
@@ -404,15 +581,20 @@ python3 -m unittest discover -s tests -v
 
 - `main`: 항상 실행되는 상태를 유지합니다.
 - `feature/<기능>`: 기능을 개발하는 브랜치. 완성 후 `git merge --no-ff`로 `main`에 병합해 병합 기록을 남깁니다.
+- 실제로 사용한 브랜치: `feature/add-quiz` (퀴즈 추가 기능), `feature/sigterm-save` (종료 신호 처리). 두 브랜치 모두 `--no-ff`로 병합했습니다.
 
-### 커밋 기록 (`git log --oneline --graph`)
+### 커밋 기록 (`git log --oneline --graph --all`)
 
-<!-- 아래 코드 블록을 실제 `git log --oneline --graph --all` 출력으로 바꿔 넣으세요. -->
+<!-- GIT_LOG_START -->
 ```
-(git log --oneline --graph 출력)
+(update_git_log.sh 실행 시 실제 출력으로 채워짐)
 ```
+<!-- GIT_LOG_END -->
+
+같은 내용을 [`docs/git_log.txt`](docs/git_log.txt)에도 텍스트로 저장했습니다.
 
 ![git log graph](docs/screenshots/git_log_graph.png)
+*그림: `git log --oneline --graph --all` 실행 화면 (WSL2 Ubuntu 터미널). `feature/add-quiz`, `feature/sigterm-save` 두 갈래가 `main`에 병합된 기록이 보입니다.*
 
 ### clone / pull 실습
 
@@ -431,18 +613,30 @@ git pull
 ```
 
 ![clone](docs/screenshots/clone_push.png)
+*그림: 2026-11-25, `~/codyssey_mission1-2-clone`에서 `git clone` → README 한 줄 추가 → `git commit` → `git push` (WSL2 Ubuntu)*
+
 ![pull](docs/screenshots/pull.png)
+*그림: 2026-11-25, 원래 작업 폴더 `~/codyssey_mission1-2`에서 `git pull`로 위 커밋을 받아오고 `tail`로 추가된 줄을 확인*
 
 ---
 
 ## 13. 실행 화면
 
+모든 화면은 2026-11-25, Windows + WSL2 Ubuntu 터미널에서 `python3 main.py`로 실행해 캡처했습니다.
+
 | 메뉴 | 퀴즈 풀기 |
 | --- | --- |
 | ![메뉴](docs/screenshots/menu.png) | ![퀴즈 풀기](docs/screenshots/play.png) |
+| 실행 직후 메뉴 화면 | 메뉴 1 → 힌트(0) 사용 → 정답/오답 → 결과 |
 
 | 퀴즈 추가 | 퀴즈 목록 · 점수 확인 |
 | --- | --- |
 | ![퀴즈 추가](docs/screenshots/add_quiz.png) | ![점수 확인](docs/screenshots/score.png) |
+| 메뉴 2 → 문제·선택지·정답·힌트 입력 후 저장 | 메뉴 3 목록 → 메뉴 4 최고 점수 |
+
+### 개발 환경
+
+![개발 환경](docs/screenshots/env_setup.png)
+*그림: `python3 --version`, `git --version`, `git config user.name/user.email`, `git init` 실습 화면*
 
 > clone 실습: 2026-11-25 복제한 폴더에서 이 줄을 추가해 push하고, 원래 폴더에서 pull로 받았습니다.
