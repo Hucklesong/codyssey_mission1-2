@@ -18,8 +18,8 @@ class Quiz:
         print(f"\n{'='*40}")
         print(f"문제 {number}. {self.question}")
         print(f"{'='*40}")
-        for option in self.options:
-            print(f"  {option}")
+        for i, option in enumerate(self.options, start=1):
+            print(f"  {i}. {option}")
         print("  (0: 힌트 보기)")
 
     def show_hint(self):
