@@ -382,7 +382,15 @@ class QuizGame:
     # ---------- 4. 점수 확인 ----------
 
     def show_score(self):
-        print(f"🏆 최고 점수: {self.high_score}문제 정답 | 총 플레이 횟수: {self.total_played}회")
+        if self.total_played == 0:
+            print("📭 아직 퀴즈를 풀지 않았습니다. 1번 메뉴에서 도전해 보세요!")
+            return
+        if self.high_score_total:
+            percent = round(self.high_score / self.high_score_total * 100)
+            print(f"🏆 최고 점수: {percent}점 ({self.high_score_total}문제 중 {self.high_score}문제 정답)")
+        else:
+            print(f"🏆 최고 점수: {self.high_score}문제 정답")
+        print(f"🎮 총 플레이 횟수: {self.total_played}회")
 
 
 if __name__ == "__main__":
