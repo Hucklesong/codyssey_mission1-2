@@ -588,8 +588,39 @@ python3 -m unittest discover -s tests -v
 ### 커밋 기록 (`git log --oneline --graph --all`)
 
 <!-- GIT_LOG_START -->
+2026-11-25 기준 · main 커밋 26개 · 병합 2회
+
 ```
-(python3 tools/update_git_log.py 실행 시 실제 출력으로 채워짐)
+* 8dd7514 Chore: 커밋 기록을 README와 docs/git_log.txt에 반영하는 스크립트 추가
+* 844e879 Docs: README 보완 (실행 예시, 점수 정책, 동시 실행, 복구 우선순위, 작업별 성능, 변경 테스트 체크리스트)
+* a304be4 Test: 벤치마크에 검색·번호 조회·추가 작업별 시간과 SQLite 비교 추가
+* 9b728a4 Fix: 예전 기록의 high_score_total(0)을 같은 점수 달성 시 채우도록 수정
+*   3fd8fa4 Merge branch 'feature/sigterm-save'
+|\  
+| * 2bb04de Feat: 종료 신호(SIGTERM)를 받아도 저장 후 안전 종료
+|/  
+* ec28ee5 Feat: 문제·선택지·힌트 입력 길이를 200자로 제한
+* df396ce Docs: clone push/pull 실습 스크린샷 추가
+* 7840455 Docs: clone 실습 기록 추가
+* 34035a0 Docs: 실행 화면과 개발 환경 스크린샷 추가
+* 16f7ce1 Chore: Claude Code 로컬 설정 폴더를 Git 추적에서 제외
+* 803ee11 Docs: README 전면 개정 (설계, 오류 처리, 성능, 변경 영향 범위)
+* 62cd230 Test: 대량 퀴즈 저장/불러오기 성능 측정 스크립트 추가
+* 937cc76 Test: 입력·저장·복구·메뉴 자동 테스트 25개 추가
+* 4a57a28 Feat: Ctrl+C·EOF 입력 중단 시 저장 후 안전 종료
+* b2f10da Feat: 점수 확인 화면에 플레이 기록 없음 처리 추가
+* e9345d9 Feat: 퀴즈 목록 기능 구현 (10개씩 페이지 표시)
+*   56ba329 Merge branch 'feature/add-quiz'
+|\  
+| * aaafb8a Feat: 퀴즈 추가 기능 구현
+|/  
+* ea81fb1 Feat: StateStore로 퀴즈·점수를 state.json에 저장하고 손상 시 백업 복구
+* 3d0427e Feat: 메뉴 화면과 번호 선택 기능 구현
+* b4beba2 Feat: 공백·빈 입력·문자·범위를 검사하는 공통 숫자 입력 함수 추가
+* 36fae56 Refactor: 선택지 번호를 데이터에서 분리하고 출력할 때 붙이도록 변경
+* 21ad122 Chore: 불필요한 test.py 삭제 및 .gitignore 정리
+* 6cb9b52 Add quiz game implementation, tests, and README
+* 0c6e51f Initial commit
 ```
 <!-- GIT_LOG_END -->
 
