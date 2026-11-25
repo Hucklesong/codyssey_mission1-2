@@ -49,26 +49,33 @@ class QuizGame:
             json.dump(self.state, f, ensure_ascii=False, indent=2)
 
     @staticmethod
-    def get_answer():
+    def get_number(prompt, min_value, max_value):
+        """min_value~max_value 사이의 정수를 입력받을 때까지 반복한다."""
         while True:
+            text = input(prompt).strip()
+            if text == "":
+                print(f"⚠️ 입력이 비어 있습니다. {min_value}-{max_value} 사이의 숫자를 입력하세요.")
+                continue
             try:
-                ans = int(input("\n정답 입력 (0~4): "))
-                if 0 <= ans <= 4:
-                    return ans
-                print("0~4 사이의 숫자를 입력해주세요.")
+                number = int(text)
             except ValueError:
-                print("숫자를 입력해주세요.")
+                print(f"⚠️ 숫자가 아닙니다. {min_value}-{max_value} 사이의 숫자를 입력하세요.")
+                continue
+            if not min_value <= number <= max_value:
+                print(f"⚠️ 범위를 벗어났습니다. {min_value}-{max_value} 사이의 숫자를 입력하세요.")
+                continue
+            return number
 
     def print_stats(self):
         print(f"📊 최고 점수: {self.state['high_score']}점 | 총 플레이 횟수: {self.state['total_played']}회")
 
     def play_quiz(self, quiz, number):
         quiz.show(number)
-        ans = self.get_answer()
+        ans = self.get_number("\n정답 입력 (0~4): ", 0, 4)
 
         if ans == 0:
             quiz.show_hint()
-            ans = self.get_answer()
+            ans = self.get_number("\n정답 입력 (0~4): ", 0, 4)
 
         if quiz.is_correct(ans):
             print("✅ 정답입니다!")
