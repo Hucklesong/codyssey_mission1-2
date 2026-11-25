@@ -1,2 +1,12 @@
+# Python 캐시
 __pycache__/
 *.pyc
+
+# 실행 중 자동 생성되는 백업/임시/손상 보관 파일 (state.json 자체는 예시 데이터로 커밋)
+state.json.bak
+state.json.tmp
+state.json.corrupted
+
+# 편집기/OS
+.vscode/
+.DS_Store
