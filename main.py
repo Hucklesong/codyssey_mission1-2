@@ -272,21 +272,27 @@ class QuizGame:
     def run(self):
         print(f"\n{LINE}\n       🎬 영화 퀴즈 게임 🎬\n{LINE}")
         self.load()
-        while True:
-            self.show_menu()
-            choice = self.get_number("선택: ", 1, 5)
-            if choice == 1:
-                self.play()
-            elif choice == 2:
-                self.add_quiz()
-            elif choice == 3:
-                self.list_quizzes()
-            elif choice == 4:
-                self.show_score()
-            else:
-                self.save()
-                print("👋 게임을 종료합니다. 다음에 또 만나요!")
-                break
+        try:
+            while True:
+                self.show_menu()
+                choice = self.get_number("선택: ", 1, 5)
+                if choice == 1:
+                    self.play()
+                elif choice == 2:
+                    self.add_quiz()
+                elif choice == 3:
+                    self.list_quizzes()
+                elif choice == 4:
+                    self.show_score()
+                else:
+                    self.save()
+                    print("👋 게임을 종료합니다. 다음에 또 만나요!")
+                    break
+        except (KeyboardInterrupt, EOFError):
+            # Ctrl+C(KeyboardInterrupt), 입력 스트림 종료(EOFError)에도 저장 후 종료한다.
+            print("\n\n⚠️ 입력이 중단되어 프로그램을 종료합니다.")
+            if self.save():
+                print("💾 데이터를 저장했습니다.")
 
     @staticmethod
     def show_menu():
